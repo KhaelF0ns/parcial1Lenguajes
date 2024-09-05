@@ -10,6 +10,6 @@ max_val = 1000
 numeros = [random.randint(min_val, max_val) for _ in range(num_count)]
 
 # Guardar los números en un archivo
-with open('entrada.txt', 'w') as file:
+with open('numeros.txt', 'w') as file:
     for num in numeros:
-        file.write(f"{num} ")
+        file.write(f"{num} \n")
