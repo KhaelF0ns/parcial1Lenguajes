@@ -27,7 +27,6 @@ if __name__ == '__main__':
             for line in file:
                 process_line(line.strip(), visitor)
     else:
-        # Modo interactivo
         while True:
             try:
                 line = input(">> ")

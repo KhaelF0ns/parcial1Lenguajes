@@ -28,3 +28,6 @@ class MyVisitor(punto5TrigCalcVisitor):
 
     def visitInt(self, ctx: punto5TrigCalcParser.IntContext):
         return int(ctx.getText())
+
+    def visitFloat(self, ctx: punto5TrigCalcParser.FloatContext):
+        return float(ctx.getText())
