@@ -1,75 +1,62 @@
 %{
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-int flag = 0;  // Bandera para indicar si se reconoce la expresión lambda
+int line_number = 0;
 %}
 
+/* Definición de macros para los patrones */
+ID                      [a-zA-Z_][a-zA-Z0-9_]*
+ENTERO                  [0-9]+
+OPS                     \*\*|\+|\-|\*|\/
+ASIGNACION              =
+DOS_PUNTOS              :
+PARENTESIS_IZQUIERDO    \(
+PARENTESIS_DERECHO      \)
+ESPACIOS                [ \t]*
+COMA                    ,
+LAMBDA                  lambda{ESPACIOS}{ID}({ESPACIOS}{COMA}{ESPACIOS}{ID})*{ESPACIOS}{DOS_PUNTOS}{ESPACIOS}[^;]*
+
 %%
 
-# Ignorar espacios y tabulaciones
-[ \t]+               ;
+{LAMBDA}                                        { printf("ACEPTA\n"); }
+{ID}{ESPACIOS}{ASIGNACION}{ESPACIOS}{LAMBDA}    { printf("ACEPTA\n"); }
+[ \t]*\n                                        { }
+.+                                              { printf("NO ACEPTA\n"); }
 
-# Identificadores (nombres de variables o funciones)
-[a-zA-Z_][a-zA-Z0-9_]* { /* Coincide con nombres de variables o funciones */ }
+%%
 
-# La palabra clave lambda
-lambda               { /* Coincide con la palabra lambda */ }
-
-# El operador de asignación
-"="                  { /* Coincide con el operador de asignación */ }
-
-# El símbolo de dos puntos que separa los parámetros del cuerpo de la lambda
-":"                  { /* Coincide con el símbolo ":" en la expresión lambda */ }
-
-# Operadores matemáticos
-"**"                 { /* Coincide con el operador de exponenciación */ }
-
-# Cualquier número entero
-[0-9]+               { /* Coincide con un número entero */ }
-
-# Paréntesis para las llamadas a funciones
-"(" | ")"            { /* Coincide con paréntesis */ }
-
-# Comas
-","                  { /* Coincide con comas */ }
-
-# Coincidir la expresión lambda en su totalidad
-[a-zA-Z_][a-zA-Z0-9_]*[ \t]*"="[ \t]*"lambda"[ \t]*"("[a-zA-Z_][a-zA-Z0-9_]*"[ \t]*")"[ \t]*":"[ \t]*[a-zA-Z_][a-zA-Z0-9_]*[ \t]*"**"[ \t]*[0-9]+ {
-    flag = 1; // Si se detecta la expresión completa, activar la bandera
+int yywrap() {
+    return 1;
 }
 
-.                     ;  // Cualquier otro carácter
-
-%%
-
-int main(int argc, char *argv[]) {
+int main(int argc, char **argv) {
     if (argc != 2) {
-        printf("Uso: %s <archivo de entrada>\n", argv[0]);
+        fprintf(stderr, "Uso: %s <archivo.txt>\n", argv[0]);
         return 1;
     }
 
-    // Abrir el archivo de entrada
-    FILE *archivo = fopen(argv[1], "r");
-    if (!archivo) {
-        printf("Error al abrir el archivo %s\n", argv[1]);
+    FILE *file = fopen(argv[1], "r");
+    if (!file) {
+        perror("No se pudo abrir el archivo");
         return 1;
     }
 
-    // Establecer la entrada de lex en el archivo
-    yyin = archivo;
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
 
-    // Ejecutar el analizador léxico
-    yylex();
+    while ((read = getline(&line, &len, file)) != -1) {
+        if (line[read - 1] == '\n') {
+            line[read - 1] = '\0';
+        }
 
-    // Comprobar si se encontró la expresión lambda
-    if (flag) {
-        printf("ACEPTA\n");
-    } else {
-        printf("NO ACEPTA\n");
+        yy_scan_string(line);
+        yylex();
     }
 
-    // Cerrar el archivo
-    fclose(archivo);
-
+    free(line);
+    fclose(file);
     return 0;
 }
